@@ -1,0 +1,30 @@
+#! /bin/zsh
+#lsdl
+
+# Change the iterator
+IFS_BAK=$IFS
+IFS=$'\n'
+
+# Get .dls files
+dlss=($(ls -1|grep -e ".dls$"))
+
+for dls in $dlss;do
+# Get url list
+urls=($(cat $dls|grep "^\(http\|https\)://"))
+[ $#urls[@] -eq 0 ] && echo "$dls:no urls" 
+# Take .dls and make directory
+dlsfolder=$(echo $dls|awk -F. '{print $1}' )
+mkdir $dlsfolder
+# cd to the folder
+cd $dlsfolder
+# loop the list and download every url
+for url in $urls;do
+wget -nv $url >&2
+done
+# cd to one above
+cd ../
+# mv the urllist to the directory and rename it
+mv $dls $dlsfolder/receipt
+done
+
+IFS=$IFS_BAK
