@@ -1,6 +1,21 @@
 #! /bin/zsh
 #lsdl
 
+# mode check
+if [ "$1" = "-m" ];then
+    if [ -p /dev/stdin ];then
+        file=$(cat -)
+    else
+        echo "Dump your urls and press esc:"
+        read -d $'\e' file
+    fi
+    [ "$file" = "" ] && exit
+    filename=$2
+    [ "$2" = "" ] && printf "\rFilename:" && read filename < /dev/tty
+    echo $file > $filename.dls && echo "$filename.dls($(echo $file | grep -c '') lines) successfully created." >&2
+    exit
+fi
+
 # Change the iterator
 IFS_BAK=$IFS
 IFS=$'\n'
@@ -13,7 +28,7 @@ for dls in $dlss;do
 urls=($(cat $dls|grep "^\(http\|https\)://"))
 [ $#urls[@] -eq 0 ] && echo "$dls:no urls" 
 # Take .dls and make directory
-dlsfolder=$(echo $dls|awk -F. '{print $1}' )
+dlsfolder=$(echo $dls| sed "s/\.dls//" )
 mkdir $dlsfolder
 # cd to the folder
 cd $dlsfolder
