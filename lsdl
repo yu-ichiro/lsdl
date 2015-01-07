@@ -1,6 +1,7 @@
 #! /bin/zsh
 #lsdl
 
+ext="dls"
 # mode check
 if [ "$1" = "-m" ];then
     if [ -p /dev/stdin ];then
@@ -12,34 +13,53 @@ if [ "$1" = "-m" ];then
     [ "$file" = "" ] && exit
     filename=$2
     [ "$2" = "" ] && printf "\rFilename:" && read filename < /dev/tty
-    echo $file > $filename.dls && echo "$filename.dls($(echo $file | grep -c '') lines) successfully created." >&2
+    echo $file > $filename.${ext} && echo "$filename.${ext}($(echo $file | grep -c '') lines) successfully created." >&2
     exit
+#Confirm before download
+elif [ "$1" = "-l" ];then
+    files=$(ls -1 | grep ".${ext}$")
+    [ "$files" != "" ] && echo $files && printf "Download these dlses?(y/n):" && read -k -s chk && [ $chk != "y" ] && exit
 fi
 
 # Change the iterator
 IFS_BAK=$IFS
 IFS=$'\n'
 
-# Get .dls files
-dlss=($(ls -1|grep -e ".dls$"))
+# Get .${ext} files
+dlss=($(ls -1|grep -e ".${ext}$"))
+
+#Reset mode
+if [ "$1" = "-r" -a -f "receipt" ];then
+    echo "A receipt file found"
+    printf "Are you sure you want to reset this directory?\nThis means redownloading all the files and deleting old files regardless of any changes made.\nThis cannot be undone(y/n):" && read -k -s chk && [ $chk != "y" ] && exit
+    printf "\nEmptying folder.."
+    for file in $(ls -1|grep -v "^receipt$");do
+        rm -rf "$file"
+    done
+    printf "Done.\nRedownload starting"
+    dlss=("receipt")
+fi
+
 
 for dls in $dlss;do
 # Get url list
 urls=($(cat $dls|grep "^\(http\|https\)://"))
 [ $#urls[@] -eq 0 ] && echo "$dls:no urls" 
-# Take .dls and make directory
-dlsfolder=$(echo $dls| sed "s/\.dls//" )
-mkdir $dlsfolder
+# Take .${ext} and make directory
+[ "$1" != "-r" ]&& dlsfolder=$(echo $dls| sed "s/\.${ext}//" )
+[ "$1" != "-r" ]&& mkdir $dlsfolder
 # cd to the folder
-cd $dlsfolder
+[ "$1" != "-r" ]&& cd $dlsfolder
 # loop the list and download every url
 for url in $urls;do
 wget -nv $url >&2
 done
+
+echo "Downloaded all the files to:$PWD"
 # cd to one above
-cd ../
+[ "$1" != "-r" ]&& cd ../
 # mv the urllist to the directory and rename it
-mv $dls $dlsfolder/receipt
+[ "$1" != "-r" ]&& mv $dls $dlsfolder/receipt
 done
 
 IFS=$IFS_BAK
