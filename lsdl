@@ -1,9 +1,19 @@
 #! /bin/zsh
-#lsdl
+#
+#   lsdl - list download
+#
+#   make a special list of the urls to download, and download them all at once. cookie supported (cannot be made from this command itself)
+#
+#   Options:
+#
+#   -c: (c)reate
+#   -r: (r)eset
+#
 
 ext="dls"
+[ -e  "$PWD/.cookie" ]&&cookieopt="--load-cookies=$PWD/.cookie"
 # mode check
-if [ "$1" = "-m" ];then
+if [ "$1" = "-c" ];then
     if [ -p /dev/stdin ];then
         file=$(cat -)
     else
@@ -14,7 +24,7 @@ if [ "$1" = "-m" ];then
     filename=$2
     [ "$2" = "" ] && printf "\rFilename:" && read filename < /dev/tty
     echo $file > $filename.${ext} && echo "$filename.${ext}($(echo $file | grep -c '') lines) successfully created." >&2
-    exit
+    echo "Start download now?(y/n):" && read -k -s chk && [ $chk != "y" ] && exit
 #Confirm before download
 elif [ "$1" = "-l" ];then
     files=$(ls -1 | grep ".${ext}$")
@@ -36,7 +46,7 @@ if [ "$1" = "-r" -a -f "receipt" ];then
     for file in $(ls -1|grep -v "^receipt$");do
         rm -rf "$file"
     done
-    printf "Done.\nRedownload starting"
+    printf "Done.\nRedownload starting\n\n"
     dlss=("receipt")
 fi
 
@@ -52,7 +62,7 @@ urls=($(cat $dls|grep "^\(http\|https\)://"))
 [ "$1" != "-r" ]&& cd $dlsfolder
 # loop the list and download every url
 for url in $urls;do
-wget -nv $url >&2
+wget --content-disposition -nv $cookieopt $url >&2
 done
 
 echo "Downloaded all the files to:$PWD"
