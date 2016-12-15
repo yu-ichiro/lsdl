@@ -8,12 +8,58 @@
 #
 #   -c: (c)reate
 #   -r: (r)eset
+#   -l: (l)ong confirmation
+#   -w: (w)get options
+#   -s: (s)leep
 #
 
 ext="dls"
 [ -e  "$PWD/.cookie" ]&&cookieopt="--load-cookies=$PWD/.cookie"
-# mode check
-if [ "$1" = "-c" ];then
+# option check
+
+usage_exit() {
+    cat << EOF
+lsdl - list download
+
+make a special list of the urls to download, and download them all at once. cookie supported (cannot be made from this command itself)}
+
+Options:
+
+-c: (c)reate
+-r: (r)eset
+-l: (l)ong confirmation
+
+-w [options..] : (w)get options
+-s [seconds] : (s)leep
+EOF
+
+    exit 1;
+}
+SLEEP=""
+WGET=""
+
+while getopts :crls:w:h OPT; do
+    case $OPT in
+        c) FLAG_C=1
+            ;;
+        r) FLAG_R=1
+            ;;
+        l) FLAG_L=1
+            ;;
+        s) SLEEP=$OPTARG
+            ;;
+        w) WGET=$OPTARG
+            ;;
+        h) usage_exit
+            ;;
+        \?) usage_exit
+            ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+if [ "$FLAG_C" ];then
     if [ -p /dev/stdin ];then
         file=$(cat -)
     else
@@ -26,9 +72,6 @@ if [ "$1" = "-c" ];then
     echo $file > $filename.${ext} && echo "$filename.${ext}($(echo $file | grep -c '') lines) successfully created." >&2
     echo "Start download now?(y/n):" && read -k -s chk && [ $chk != "y" ] && exit
 #Confirm before download
-elif [ "$1" = "-l" ];then
-    files=$(ls -1 | grep ".${ext}$")
-    [ "$files" != "" ] && echo $files && printf "Download these dlses?(y/n):" && read -k -s chk && [ $chk != "y" ] && exit
 fi
 
 # Change the iterator
@@ -39,7 +82,7 @@ IFS=$'\n'
 dlss=($(ls -1|grep -e ".${ext}$"))
 
 #Reset mode
-if [ "$1" = "-r" -a -f "receipt" ];then
+if [ "$FLAG_R" -a -f "receipt" ];then
     echo "A receipt file found"
     printf "Are you sure you want to reset this directory?\nThis means redownloading all the files and deleting old files regardless of any changes made.\nThis cannot be undone(y/n):" && read -k -s chk && [ $chk != "y" ] && exit
     printf "\nEmptying folder.."
@@ -50,28 +93,33 @@ if [ "$1" = "-r" -a -f "receipt" ];then
     dlss=("receipt")
 fi
 
+if [ "$FLAG_L" ];then
+    files=$(ls -1 | grep ".${ext}$")
+    [ "$files" != "" ] && echo $files && printf "Download these dlses?(y/n):" && read -k -s chk && [ $chk != "y" ] && exit
+fi
 
 for dls in $dlss;do
 # Get url list
 urls=($(cat $dls|grep "^\(http\|https\)://"))
 [ $#urls[@] -eq 0 ] && echo "$dls:no urls" 
 # Take .${ext} and make directory
-[ "$1" != "-r" ]&& dlsfolder=$(echo $dls| sed "s/\.${ext}//" )
-[ "$1" != "-r" ]&& mkdir $dlsfolder
+[ "$FLAG_R" != 1 ]&& dlsfolder=$(echo $dls| sed "s/\.${ext}//" )
+[ "$FLAG_R" != 1 ]&& mkdir $dlsfolder
 # cd to the folder
-[ "$1" != "-r" ]&& cd $dlsfolder
+[ "$FLAG_R" != 1 ]&& cd $dlsfolder
 # loop the list and download every url
 for url in $urls;do
     fn=""
     [ "$(echo $url | cut -d, -f2)" != "" ]&&fn="-O $(echo $url | cut -d, -f2)" 
     wget --content-disposition -nv $cookieopt $WGET $(echo $url| cut -d, -f1) $fn >&2
+    [ "$SLEEP" != "" ]&&sleep $SLEEP
 done
 
 echo "Downloaded all the files to:$PWD"
 # cd to one above
-[ "$1" != "-r" ]&& cd ../
+[ "$FLAG_R" != 1 ]&& cd ../
 # mv the urllist to the directory and rename it
-[ "$1" != "-r" ]&& mv $dls $dlsfolder/receipt
+[ "$FLAG_R" != 1 ]&& mv $dls $dlsfolder/receipt
 done
 
 IFS=$IFS_BAK
