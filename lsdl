@@ -62,7 +62,9 @@ urls=($(cat $dls|grep "^\(http\|https\)://"))
 [ "$1" != "-r" ]&& cd $dlsfolder
 # loop the list and download every url
 for url in $urls;do
-wget --content-disposition -nv $cookieopt $url >&2
+    fn=""
+    [ "$(echo $url | cut -d, -f2)" != "" ]&&fn="-O $(echo $url | cut -d, -f2)" 
+    wget --content-disposition -nv $cookieopt $WGET $(echo $url| cut -d, -f1) $fn >&2
 done
 
 echo "Downloaded all the files to:$PWD"
