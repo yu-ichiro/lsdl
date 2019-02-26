@@ -25,8 +25,30 @@ Then, it will do three things:
  
 If you have different lists in the same folder, it downloads it all!
 
-## Create mode
+## Options
+
+### Create mode (-c)
 
 If you put the `-c` option, it switches to create mode to create list files.
 
 If you connect to a pipe. it reads from it too.
+
+### Wget Options (-w)
+
+You can add custom wget options to every download
+
+```
+lsdl -w ...
+```
+
+### Sleep Option (-s)
+
+You can add a rate limit in seconds to sleep between each download
+
+```
+lsdl -s 1 # sleeps 1 second after each download
+```
+
+## Cookies
+
+If you need cookie to access the resource, you can simply add a .cookie file to the same level as the .dls file, and lsdl will automatically include it.
