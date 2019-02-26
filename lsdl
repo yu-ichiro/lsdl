@@ -99,27 +99,27 @@ if [ "$FLAG_L" ];then
 fi
 
 for dls in $dlss;do
-# Get url list
-urls=($(cat $dls|grep "^\(http\|https\)://"))
-[ $#urls[@] -eq 0 ] && echo "$dls:no urls" 
-# Take .${ext} and make directory
-[ "$FLAG_R" != 1 ]&& dlsfolder=$(echo $dls| sed "s/\.${ext}//" )
-[ "$FLAG_R" != 1 ]&& mkdir $dlsfolder
-# cd to the folder
-[ "$FLAG_R" != 1 ]&& cd $dlsfolder
-# loop the list and download every url
-for url in $urls;do
-    fn=""
-    [ "$(echo $url | cut -d, -f2)" != "" ]&&fn="-O $(echo $url | cut -d, -f2)" 
-    wget --content-disposition -nv $cookieopt $WGET $(echo $url| cut -d, -f1) $fn >&2
-    [ "$SLEEP" != "" ]&&sleep $SLEEP
-done
+    # Get url list
+    urls=($(cat $dls|grep "^\(http\|https\)://"))
+    [ $#urls[@] -eq 0 ] && echo "$dls:no urls" 
+    # Take .${ext} and make directory
+    [ "$FLAG_R" != 1 ]&& dlsfolder=$(echo $dls| sed "s/\.${ext}//" )
+    [ "$FLAG_R" != 1 ]&& mkdir $dlsfolder
+    # cd to the folder
+    [ "$FLAG_R" != 1 ]&& cd $dlsfolder
+    # loop the list and download every url
+    for url in $urls;do
+        fn=""
+        [ "$(echo $url | cut -d, -f2)" != "" ]&&fn="-O $(echo $url | cut -d, -f2)" 
+        wget --content-disposition -nv $cookieopt $WGET $(echo $url| cut -d, -f1) $fn >&2
+        [ "$SLEEP" != "" ]&&sleep $SLEEP
+    done
 
-echo "Downloaded all the files to:$PWD"
-# cd to one above
-[ "$FLAG_R" != 1 ]&& cd ../
-# mv the urllist to the directory and rename it
-[ "$FLAG_R" != 1 ]&& mv $dls $dlsfolder/receipt
+    echo "Downloaded all the files to:$PWD"
+    # cd to one above
+    [ "$FLAG_R" != 1 ]&& cd ../
+    # mv the urllist to the directory and rename it
+    [ "$FLAG_R" != 1 ]&& mv $dls $dlsfolder/receipt
 done
 
 IFS=$IFS_BAK
