@@ -25,8 +25,8 @@ Then, it will do three things:
  
 If you have different lists in the same folder, it downloads it all!
 
-## Make mode
+## Create mode
 
-If you put the `-m` option, it switches to make mode to make list files.
+If you put the `-c` option, it switches to create mode to create list files.
 
 If you connect to a pipe. it reads from it too.
