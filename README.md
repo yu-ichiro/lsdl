@@ -2,10 +2,10 @@ lsdl
 ====
 
 A small shellscript to download multiple files on a list at once.
-##Dependency
+## Dependency
 wget ( and maybe zsh )
 
-##Usage
+## Usage
 
 make a file with urls separated with newline:
 
@@ -25,8 +25,8 @@ Then, it will do three things:
  
 If you have different lists in the same folder, it downloads it all!
 
-##Make mode
+## Make mode
 
 If you put the `-m` option, it switches to make mode to make list files.
 
-If you connect to a pipe it reads from it too.
+If you connect to a pipe. it reads from it too.
